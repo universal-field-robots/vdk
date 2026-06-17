@@ -6,12 +6,12 @@ import (
 	"io"
 	"time"
 
-	"github.com/joshjowen/vdk/av"
-	"github.com/joshjowen/vdk/codec/aacparser"
-	"github.com/joshjowen/vdk/codec/h264parser"
-	"github.com/joshjowen/vdk/codec/mjpeg"
-	"github.com/joshjowen/vdk/format/ts/tsio"
-	"github.com/joshjowen/vdk/utils/bits/pio"
+	"github.com/universal-field-robots/vdk/av"
+	"github.com/universal-field-robots/vdk/codec/aacparser"
+	"github.com/universal-field-robots/vdk/codec/h264parser"
+	"github.com/universal-field-robots/vdk/codec/mjpeg"
+	"github.com/universal-field-robots/vdk/format/ts/tsio"
+	"github.com/universal-field-robots/vdk/utils/bits/pio"
 )
 
 type Demuxer struct {

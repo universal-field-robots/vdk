@@ -7,14 +7,14 @@ import (
 	"os"
 	"time"
 
-	"github.com/joshjowen/vdk/av"
-	"github.com/joshjowen/vdk/codec/aacparser"
-	"github.com/joshjowen/vdk/codec/h264parser"
-	"github.com/joshjowen/vdk/codec/h265parser"
-	"github.com/joshjowen/vdk/format/fmp4/fmp4io"
-	"github.com/joshjowen/vdk/format/mp4/mp4io"
-	"github.com/joshjowen/vdk/format/mp4f/mp4fio"
-	"github.com/joshjowen/vdk/utils/bits/pio"
+	"github.com/universal-field-robots/vdk/av"
+	"github.com/universal-field-robots/vdk/codec/aacparser"
+	"github.com/universal-field-robots/vdk/codec/h264parser"
+	"github.com/universal-field-robots/vdk/codec/h265parser"
+	"github.com/universal-field-robots/vdk/format/fmp4/fmp4io"
+	"github.com/universal-field-robots/vdk/format/mp4/mp4io"
+	"github.com/universal-field-robots/vdk/format/mp4f/mp4fio"
+	"github.com/universal-field-robots/vdk/utils/bits/pio"
 )
 
 type Muxer struct {

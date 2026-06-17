@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"github.com/joshjowen/vdk/format/rtspv2"
-	"github.com/joshjowen/vdk/format/ts"
+	"github.com/universal-field-robots/vdk/format/rtspv2"
+	"github.com/universal-field-robots/vdk/format/ts"
 	"log"
 	"os/exec"
 	"time"

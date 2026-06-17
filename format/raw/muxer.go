@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"os"
 
-	"github.com/joshjowen/vdk/codec/h265parser"
+	"github.com/universal-field-robots/vdk/codec/h265parser"
 
-	"github.com/joshjowen/vdk/codec/h264parser"
+	"github.com/universal-field-robots/vdk/codec/h264parser"
 
-	"github.com/joshjowen/vdk/av"
+	"github.com/universal-field-robots/vdk/av"
 )
 
 var startCode = []byte{0, 0, 0, 1}

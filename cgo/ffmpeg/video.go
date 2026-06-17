@@ -20,8 +20,8 @@ import (
 	"runtime"
 	"unsafe"
 
-	"github.com/joshjowen/vdk/av"
-	"github.com/joshjowen/vdk/codec/h264parser"
+	"github.com/universal-field-robots/vdk/av"
+	"github.com/universal-field-robots/vdk/codec/h264parser"
 )
 
 type VideoDecoder struct {

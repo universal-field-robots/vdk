@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/joshjowen/vdk/format/ts"
+	"github.com/universal-field-robots/vdk/format/ts"
 	"log"
 	"os"
 )

@@ -3,7 +3,7 @@ package fragment
 import (
 	"time"
 
-	"github.com/joshjowen/vdk/av"
+	"github.com/universal-field-robots/vdk/av"
 )
 
 type Fragment struct {

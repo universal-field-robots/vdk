@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/joshjowen/vdk/av"
-	"github.com/joshjowen/vdk/av/pktque"
+	"github.com/universal-field-robots/vdk/av"
+	"github.com/universal-field-robots/vdk/av/pktque"
 )
 
 var Debug bool

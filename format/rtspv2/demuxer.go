@@ -2,10 +2,10 @@ package rtspv2
 
 import (
 	"encoding/binary"
-	"github.com/joshjowen/vdk/av"
-	"github.com/joshjowen/vdk/codec/aacparser"
-	"github.com/joshjowen/vdk/codec/h264parser"
-	"github.com/joshjowen/vdk/codec/h265parser"
+	"github.com/universal-field-robots/vdk/av"
+	"github.com/universal-field-robots/vdk/codec/aacparser"
+	"github.com/universal-field-robots/vdk/codec/h264parser"
+	"github.com/universal-field-robots/vdk/codec/h265parser"
 	"math"
 	"time"
 )
@@ -214,34 +214,42 @@ func (client *RTSPClient) handleAudio(content []byte) ([]*av.Packet, bool) {
 	if client.PreAudioTS == 0 {
 		client.PreAudioTS = client.timestamp
 	}
-	nalRaw, _ := h264parser.SplitNALUs(content[client.offset:client.end])
 	var retmap []*av.Packet
-	for _, nal := range nalRaw {
-		var duration time.Duration
-		switch client.audioCodec {
-		case av.PCM_MULAW, av.PCM_ALAW:
-			duration = time.Duration(len(nal)) * time.Second / time.Duration(client.AudioTimeScale)
-			retmap = client.appendAudioPacket(retmap, nal, duration)
-		case av.OPUS:
-			duration = time.Duration(20) * time.Millisecond
-			retmap = client.appendAudioPacket(retmap, nal, duration)
-		case av.AAC:
-			auHeadersLength := uint16(0) | (uint16(nal[0]) << 8) | uint16(nal[1])
-			auHeadersCount := auHeadersLength >> 4
-			framesPayloadOffset := 2 + int(auHeadersCount)<<1
-			auHeaders := nal[2:framesPayloadOffset]
-			framesPayload := nal[framesPayloadOffset:]
-			for i := 0; i < int(auHeadersCount); i++ {
-				auHeader := uint16(0) | (uint16(auHeaders[0]) << 8) | uint16(auHeaders[1])
-				frameSize := auHeader >> 3
-				frame := framesPayload[:frameSize]
-				auHeaders = auHeaders[2:]
-				framesPayload = framesPayload[frameSize:]
-				if _, _, _, _, err := aacparser.ParseADTSHeader(frame); err == nil {
-					frame = frame[7:]
+	switch client.audioCodec {
+	case av.PCM_MULAW, av.PCM_ALAW, av.PCM:
+		// G.711 / raw PCM: the RTP payload is a contiguous block of audio
+		// samples. It must NOT be run through the H.264 NAL splitter, which
+		// strips bytes on 0x000001 start-code sequences and reframes the data,
+		// corrupting the audio. Emit the payload as a single packet.
+		payload := content[client.offset:client.end]
+		duration := time.Duration(len(payload)) * time.Second / time.Duration(client.AudioTimeScale)
+		retmap = client.appendAudioPacket(retmap, payload, duration)
+	default:
+		nalRaw, _ := h264parser.SplitNALUs(content[client.offset:client.end])
+		for _, nal := range nalRaw {
+			var duration time.Duration
+			switch client.audioCodec {
+			case av.OPUS:
+				duration = time.Duration(20) * time.Millisecond
+				retmap = client.appendAudioPacket(retmap, nal, duration)
+			case av.AAC:
+				auHeadersLength := uint16(0) | (uint16(nal[0]) << 8) | uint16(nal[1])
+				auHeadersCount := auHeadersLength >> 4
+				framesPayloadOffset := 2 + int(auHeadersCount)<<1
+				auHeaders := nal[2:framesPayloadOffset]
+				framesPayload := nal[framesPayloadOffset:]
+				for i := 0; i < int(auHeadersCount); i++ {
+					auHeader := uint16(0) | (uint16(auHeaders[0]) << 8) | uint16(auHeaders[1])
+					frameSize := auHeader >> 3
+					frame := framesPayload[:frameSize]
+					auHeaders = auHeaders[2:]
+					framesPayload = framesPayload[frameSize:]
+					if _, _, _, _, err := aacparser.ParseADTSHeader(frame); err == nil {
+						frame = frame[7:]
+					}
+					duration = time.Duration((float32(1024)/float32(client.AudioTimeScale))*1000*1000*1000) * time.Nanosecond
+					retmap = client.appendAudioPacket(retmap, frame, duration)
 				}
-				duration = time.Duration((float32(1024)/float32(client.AudioTimeScale))*1000*1000*1000) * time.Nanosecond
-				retmap = client.appendAudioPacket(retmap, frame, duration)
 			}
 		}
 	}

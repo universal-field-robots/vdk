@@ -18,12 +18,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/joshjowen/vdk/av"
-	"github.com/joshjowen/vdk/codec"
-	"github.com/joshjowen/vdk/codec/aacparser"
-	"github.com/joshjowen/vdk/codec/h264parser"
-	"github.com/joshjowen/vdk/codec/h265parser"
-	"github.com/joshjowen/vdk/format/rtsp/sdp"
+	"github.com/universal-field-robots/vdk/av"
+	"github.com/universal-field-robots/vdk/codec"
+	"github.com/universal-field-robots/vdk/codec/aacparser"
+	"github.com/universal-field-robots/vdk/codec/h264parser"
+	"github.com/universal-field-robots/vdk/codec/h265parser"
+	"github.com/universal-field-robots/vdk/format/rtsp/sdp"
 )
 
 const (

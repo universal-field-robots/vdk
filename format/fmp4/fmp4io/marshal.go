@@ -4,7 +4,7 @@ import (
 	"math"
 	"time"
 
-	"github.com/joshjowen/vdk/utils/bits/pio"
+	"github.com/universal-field-robots/vdk/utils/bits/pio"
 )
 
 func GetTime32(b []byte) (t time.Time) {

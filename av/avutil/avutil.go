@@ -9,9 +9,9 @@ import (
 	"path"
 	"strings"
 
-	"github.com/joshjowen/vdk/av"
-	"github.com/joshjowen/vdk/codec/aacparser"
-	"github.com/joshjowen/vdk/codec/h264parser"
+	"github.com/universal-field-robots/vdk/av"
+	"github.com/universal-field-robots/vdk/codec/aacparser"
+	"github.com/universal-field-robots/vdk/codec/h264parser"
 )
 
 type HandlerDemuxer struct {

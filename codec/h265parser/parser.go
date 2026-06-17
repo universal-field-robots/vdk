@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/joshjowen/vdk/av"
-	"github.com/joshjowen/vdk/utils/bits"
-	"github.com/joshjowen/vdk/utils/bits/pio"
+	"github.com/universal-field-robots/vdk/av"
+	"github.com/universal-field-robots/vdk/utils/bits"
+	"github.com/universal-field-robots/vdk/utils/bits/pio"
 )
 
 type SPSInfo struct {

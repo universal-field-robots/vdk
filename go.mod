@@ -1,4 +1,4 @@
-module github.com/joshjowen/vdk
+module github.com/universal-field-robots/vdk
 
 go 1.18
 

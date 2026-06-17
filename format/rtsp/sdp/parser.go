@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/joshjowen/vdk/av"
+	"github.com/universal-field-robots/vdk/av"
 )
 
 type Session struct {

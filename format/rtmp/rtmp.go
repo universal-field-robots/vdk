@@ -14,11 +14,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/joshjowen/vdk/av"
-	"github.com/joshjowen/vdk/av/avutil"
-	"github.com/joshjowen/vdk/format/flv"
-	"github.com/joshjowen/vdk/format/flv/flvio"
-	"github.com/joshjowen/vdk/utils/bits/pio"
+	"github.com/universal-field-robots/vdk/av"
+	"github.com/universal-field-robots/vdk/av/avutil"
+	"github.com/universal-field-robots/vdk/format/flv"
+	"github.com/universal-field-robots/vdk/format/flv/flvio"
+	"github.com/universal-field-robots/vdk/utils/bits/pio"
 )
 
 var Debug bool

@@ -6,9 +6,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/joshjowen/vdk/av"
-	"github.com/joshjowen/vdk/format/fmp4/fmp4io"
-	"github.com/joshjowen/vdk/format/fmp4/fragment"
+	"github.com/universal-field-robots/vdk/av"
+	"github.com/universal-field-robots/vdk/format/fmp4/fmp4io"
+	"github.com/universal-field-robots/vdk/format/fmp4/fragment"
 )
 
 var (

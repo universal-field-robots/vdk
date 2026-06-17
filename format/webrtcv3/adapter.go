@@ -7,10 +7,11 @@ import (
 	"log"
 	"time"
 
-	"github.com/joshjowen/vdk/codec/h264parser"
+	"github.com/universal-field-robots/vdk/codec/h264parser"
 
-	"github.com/joshjowen/vdk/av"
+	"github.com/universal-field-robots/vdk/av"
 	"github.com/pion/interceptor"
+	"github.com/pion/rtp"
 	"github.com/pion/webrtc/v3"
 	"github.com/pion/webrtc/v3/pkg/media"
 )
@@ -35,6 +36,12 @@ type Muxer struct {
 type Stream struct {
 	codec av.CodecData
 	track *webrtc.TrackLocalStaticSample
+	// audioRTP is used for G.711 (PCMA/PCMU), which we forward as raw RTP
+	// instead of through the Sample API. ts/seq track the outgoing RTP
+	// timestamp and sequence number for that track.
+	audioRTP *webrtc.TrackLocalStaticRTP
+	ts       uint32
+	seq      uint16
 }
 type Options struct {
 	// ICEServers is a required array of ICE server URLs to connect to (e.g., STUN or TURN server URLs)
@@ -141,37 +148,64 @@ func (element *Muxer) WriteHeader(streams []av.CodecData, sdp64 string) (string,
 				}
 			}
 		} else if i2.Type().IsAudio() {
-			AudioCodecString := webrtc.MimeTypePCMA
 			switch i2.Type() {
-			case av.PCM_ALAW:
-				AudioCodecString = webrtc.MimeTypePCMA
-			case av.PCM_MULAW:
-				AudioCodecString = webrtc.MimeTypePCMU
+			case av.PCM_ALAW, av.PCM_MULAW:
+				// G.711: forward as raw RTP rather than via the Sample API.
+				// pion's Sample packetizer forces the RTP marker bit on every
+				// packet (Marker: i == len(payloads)-1, and G.711 is always a
+				// single payload), which Chrome's NetEq reads as a talkspurt
+				// restart and turns the audio into oscillating "fax" noise.
+				// Writing RTP directly lets us control the marker bit and
+				// timestamp, the same way MediaMTX does it.
+				mimeType := webrtc.MimeTypePCMA
+				if i2.Type() == av.PCM_MULAW {
+					mimeType = webrtc.MimeTypePCMU
+				}
+				audioTrack, err := webrtc.NewTrackLocalStaticRTP(webrtc.RTPCodecCapability{
+					MimeType:  mimeType,
+					ClockRate: uint32(i2.(av.AudioCodecData).SampleRate()),
+				}, "pion-rtsp-audio", "pion-rtsp-audio")
+				if err != nil {
+					return "", err
+				}
+				if rtpSender, err := peerConnection.AddTrack(audioTrack); err != nil {
+					return "", err
+				} else {
+					go func() {
+						rtcpBuf := make([]byte, 1500)
+						for {
+							if _, _, rtcpErr := rtpSender.Read(rtcpBuf); rtcpErr != nil {
+								return
+							}
+						}
+					}()
+				}
+				element.streams[int8(i)] = &Stream{codec: i2, audioRTP: audioTrack}
+				continue
 			case av.OPUS:
-				AudioCodecString = webrtc.MimeTypeOpus
+				track, err = webrtc.NewTrackLocalStaticSample(webrtc.RTPCodecCapability{
+					MimeType:  webrtc.MimeTypeOpus,
+					Channels:  uint16(i2.(av.AudioCodecData).ChannelLayout().Count()),
+					ClockRate: uint32(i2.(av.AudioCodecData).SampleRate()),
+				}, "pion-rtsp-audio", "pion-rtsp-audio")
+				if err != nil {
+					return "", err
+				}
+				if rtpSender, err := peerConnection.AddTrack(track); err != nil {
+					return "", err
+				} else {
+					go func() {
+						rtcpBuf := make([]byte, 1500)
+						for {
+							if _, _, rtcpErr := rtpSender.Read(rtcpBuf); rtcpErr != nil {
+								return
+							}
+						}
+					}()
+				}
 			default:
 				log.Println(ErrorIgnoreAudioTrack)
 				continue
-			}
-			track, err = webrtc.NewTrackLocalStaticSample(webrtc.RTPCodecCapability{
-				MimeType:  AudioCodecString,
-				Channels:  uint16(i2.(av.AudioCodecData).ChannelLayout().Count()),
-				ClockRate: uint32(i2.(av.AudioCodecData).SampleRate()),
-			}, "pion-rtsp-audio", "pion-rtsp-audio")
-			if err != nil {
-				return "", err
-			}
-			if rtpSender, err := peerConnection.AddTrack(track); err != nil {
-				return "", err
-			} else {
-				go func() {
-					rtcpBuf := make([]byte, 1500)
-					for {
-						if _, _, rtcpErr := rtpSender.Read(rtcpBuf); rtcpErr != nil {
-							return
-						}
-					}
-				}()
 			}
 		}
 		element.streams[int8(i)] = &Stream{track: track, codec: i2}
@@ -265,9 +299,35 @@ func (element *Muxer) WritePacket(pkt av.Packet) (err error) {
 				}
 
 			*/
-		case av.PCM_ALAW:
+		case av.PCM_ALAW, av.PCM_MULAW:
+			// Forward G.711 as raw RTP with a monotonic timestamp and no forced
+			// marker bit (see WriteHeader). The timestamp advances by the number
+			// of samples in this payload (1 byte = 1 sample for G.711; divide by
+			// channel count for multi-channel).
+			samples := uint32(len(pkt.Data))
+			if ch := tmp.codec.(av.AudioCodecData).ChannelLayout().Count(); ch > 1 {
+				samples /= uint32(ch)
+			}
+			rtpPkt := &rtp.Packet{
+				Header: rtp.Header{
+					Version:        2,
+					Marker:         false,
+					SequenceNumber: tmp.seq,
+					Timestamp:      tmp.ts,
+				},
+				Payload: pkt.Data,
+			}
+			tmp.seq++
+			tmp.ts += samples
+			if err = tmp.audioRTP.WriteRTP(rtpPkt); err == nil {
+				WritePacketSuccess = true
+			}
+			return err
 		case av.OPUS:
-		case av.PCM_MULAW:
+			if err = tmp.track.WriteSample(media.Sample{Data: pkt.Data, Duration: pkt.Duration}); err == nil {
+				WritePacketSuccess = true
+			}
+			return err
 		case av.AAC:
 			//TODO: NEED ADD DECODER AND ENCODER
 			return ErrorCodecNotSupported
@@ -277,11 +337,6 @@ func (element *Muxer) WritePacket(pkt av.Packet) (err error) {
 		default:
 			return ErrorCodecNotSupported
 		}
-		err = tmp.track.WriteSample(media.Sample{Data: pkt.Data, Duration: pkt.Duration})
-		if err == nil {
-			WritePacketSuccess = true
-		}
-		return err
 	} else {
 		WritePacketSuccess = true
 		return nil

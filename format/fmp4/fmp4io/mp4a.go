@@ -1,8 +1,8 @@
 package fmp4io
 
 import (
-	"github.com/joshjowen/vdk/format/fmp4/esio"
-	"github.com/joshjowen/vdk/utils/bits/pio"
+	"github.com/universal-field-robots/vdk/format/fmp4/esio"
+	"github.com/universal-field-robots/vdk/utils/bits/pio"
 )
 
 const MP4A = Tag(0x6d703461)

@@ -1,6 +1,6 @@
 package nvr
 
-import "github.com/joshjowen/vdk/av"
+import "github.com/universal-field-robots/vdk/av"
 
 type Stream struct {
 	codec av.CodecData

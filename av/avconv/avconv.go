@@ -5,10 +5,10 @@ import (
 	"io"
 	"time"
 
-	"github.com/joshjowen/vdk/av"
-	"github.com/joshjowen/vdk/av/avutil"
-	"github.com/joshjowen/vdk/av/pktque"
-	"github.com/joshjowen/vdk/av/transcode"
+	"github.com/universal-field-robots/vdk/av"
+	"github.com/universal-field-robots/vdk/av/avutil"
+	"github.com/universal-field-robots/vdk/av/pktque"
+	"github.com/universal-field-robots/vdk/av/transcode"
 )
 
 var Debug bool
